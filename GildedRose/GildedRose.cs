@@ -1,97 +1,46 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using GildedRoseKata.Interfaces.Updaters;
+using GildedRoseKata.Models.Updaters;
 
 namespace GildedRoseKata;
 
 public class GildedRose
 {
-    IList<Item> Items;
+    private readonly IList<Item> _items;
+    private readonly Dictionary<string, IItemUpdater> _itemUpdaters;
 
-    public GildedRose(IList<Item> Items)
+    public GildedRose(IList<Item> items)
     {
-        this.Items = Items;
+        _items = items;
+        _itemUpdaters = new Dictionary<string, IItemUpdater>
+        {
+            { "Aged Brie", new AgedBrieUpdater() },
+            { "Backstage passes to a TAFKAL80ETC concert", new BackstagePassUpdater() },
+            { "Sulfuras, Hand of Ragnaros", new SulfurasUpdater() },
+            { "Conjured", new ConjuredItemUpdater() }
+        };
     }
 
     public void UpdateQuality()
     {
-
-        for (var i = 0; i < Items.Count; i++)
+        foreach (var item in _items)
         {
-            bool isConjured = Items[i].Name.ToLower().Contains("conjured");
-            int degradeRate = isConjured ? 2 : 1;
+            var updater = GetUpdaterForItem(item);
+            updater.Update(item);
+        }
+    }
 
-            if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
+    private IItemUpdater GetUpdaterForItem(Item item)
+    {
+        foreach (var key in _itemUpdaters.Keys)
+        {
+            if (item.Name.Contains(key, StringComparison.OrdinalIgnoreCase))
             {
-                if (Items[i].Quality > 0)
-                {
-                    if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                    {
-                        int degrade = isConjured ? 2 : 1;
-                        Items[i].Quality -= degrade;
-                        if (Items[i].Quality < 0) Items[i].Quality = 0;
-                    }
-                }
-            }
-            else
-            {
-                if (Items[i].Quality < 50)
-                {
-                    Items[i].Quality = Items[i].Quality + 1;
-
-                    if (Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                    {
-                        if (Items[i].SellIn < 11)
-                        {
-                            if (Items[i].Quality < 50)
-                            {
-                                Items[i].Quality = Items[i].Quality + 1;
-                            }
-                        }
-
-                        if (Items[i].SellIn < 6)
-                        {
-                            if (Items[i].Quality < 50)
-                            {
-                                Items[i].Quality = Items[i].Quality + 1;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-            {
-                Items[i].SellIn = Items[i].SellIn - 1;
-            }
-
-            if (Items[i].SellIn < 0)
-            {
-                if (Items[i].Name != "Aged Brie")
-                {
-                    if (Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                    {
-                        if (Items[i].Quality > 0)
-                        {
-                            if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                            {
-                                int degrade = isConjured ? 2 : 1;
-                                Items[i].Quality -= degrade;
-                                if (Items[i].Quality < 0) Items[i].Quality = 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Items[i].Quality = Items[i].Quality - Items[i].Quality;
-                    }
-                }
-                else
-                {
-                    if (Items[i].Quality < 50)
-                    {
-                        Items[i].Quality = Items[i].Quality + 1;
-                    }
-                }
+                return _itemUpdaters[key];
             }
         }
+
+        return new DefaultItemUpdater();
     }
 }
