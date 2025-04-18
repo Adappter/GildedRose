@@ -13,15 +13,21 @@ public class GildedRose
 
     public void UpdateQuality()
     {
+
         for (var i = 0; i < Items.Count; i++)
         {
+            bool isConjured = Items[i].Name.ToLower().Contains("conjured");
+            int degradeRate = isConjured ? 2 : 1;
+
             if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
             {
                 if (Items[i].Quality > 0)
                 {
                     if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
                     {
-                        Items[i].Quality = Items[i].Quality - 1;
+                        int degrade = isConjured ? 2 : 1;
+                        Items[i].Quality -= degrade;
+                        if (Items[i].Quality < 0) Items[i].Quality = 0;
                     }
                 }
             }
@@ -67,7 +73,9 @@ public class GildedRose
                         {
                             if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
                             {
-                                Items[i].Quality = Items[i].Quality - 1;
+                                int degrade = isConjured ? 2 : 1;
+                                Items[i].Quality -= degrade;
+                                if (Items[i].Quality < 0) Items[i].Quality = 0;
                             }
                         }
                     }
